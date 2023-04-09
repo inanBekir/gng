@@ -22,25 +22,29 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity <Object> getUserById(@PathVariable Long id) {
-        User user = userService.getUser(id);
+        User user = userService.getUserById(id);
+        Map<String, Object> response = new HashMap<>();
         if (user == null) {
-            Map<String, Object> response = new HashMap<>();
             response.put("status", HttpStatus.NOT_FOUND.value());
             response.put("error", "user_not_found");
             return ResponseEntity.internalServerError().body(response);
         } else {
-            return ResponseEntity.ok(user);
+            response.put("status", HttpStatus.OK.value());
+            response.put("user", user);
+            return ResponseEntity.ok().body(response);
         }
     }
 
     @PostMapping
     public ResponseEntity <Object> createUserWithRole(@Valid @RequestBody UserDto userDto) {
+        Map<String, Object> response = new HashMap<>();
         try {
             User user = userService.createUserWithRole(userDto);
-            return new ResponseEntity<>(user, HttpStatus.CREATED);
+            response.put("status", HttpStatus.CREATED.value());
+            response.put("user", user);
+            return ResponseEntity.ok().body(response);
         } catch (Exception e) {
             String errorMessage = e.getMessage();
-            Map<String, Object> response = new HashMap<>();
             response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
             response.put("error", errorMessage);
             return ResponseEntity.internalServerError().body(response);

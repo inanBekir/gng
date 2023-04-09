@@ -12,8 +12,8 @@ public class UserDto {
     @Email(message = "invalid_email")
     private String email;
 
-    @Size(min = 8, max = 20, message = "invalid_size")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$", message = "invalid_type")
+    @Size(min = 8, max = 20, message = "invalid_password_size")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$", message = "invalid_password_pattern")
     private String password;
 
     @NotEmpty(message = "empty_type")

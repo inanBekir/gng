@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -23,9 +22,8 @@ public class UserService {
     @Autowired
     private RoleRepository roleRepository;
 
-    public User getUser(Long id) {
-        Optional<User> userOptional = userRepository.findById(id);
-        return userOptional.orElse(null); // return null if user not found
+    public User getUserById(Long id) {
+        return userRepository.findById(id).orElse(null);
     }
 
     public User createUserWithRole(UserDto userDto) {
