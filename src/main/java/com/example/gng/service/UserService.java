@@ -5,12 +5,16 @@ import com.example.gng.model.Role;
 import com.example.gng.model.User;
 import com.example.gng.repository.RoleRepository;
 import com.example.gng.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -23,7 +27,12 @@ public class UserService {
     private RoleRepository roleRepository;
 
     public User getUserById(Long id) {
-        return userRepository.findById(id).orElse(null);
+        User user = userRepository.findById(id).orElse(null);
+        List<Role> roles = roleRepository.findByUsersId(id);
+        if (user != null) {
+            user.setRoles(new HashSet<>(roles));
+        }
+        return user;
     }
 
     public User createUserWithRole(UserDto userDto) {
