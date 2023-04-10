@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -26,10 +27,14 @@ public class UserService {
     @Autowired
     private RoleRepository roleRepository;
 
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email).orElse(null);
+    }
+
     public User getUserById(Long id) {
         User user = userRepository.findById(id).orElse(null);
-        List<Role> roles = roleRepository.findByUsersId(id);
         if (user != null) {
+            List<Role> roles = roleRepository.findByUsersId(id);
             user.setRoles(new HashSet<>(roles));
         }
         return user;
