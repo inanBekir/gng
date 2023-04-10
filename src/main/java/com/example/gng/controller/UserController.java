@@ -2,14 +2,17 @@ package com.example.gng.controller;
 
 import com.example.gng.dto.UserDto;
 import com.example.gng.model.User;
+import com.example.gng.security.JwtUtils;
 import com.example.gng.service.UserService;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,8 +20,12 @@ import java.util.Map;
 @Validated
 @RequestMapping("/api/users")
 public class UserController {
+
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     @GetMapping("/{id}")
     public ResponseEntity <Object> getUserById(@PathVariable Long id) {
@@ -40,8 +47,12 @@ public class UserController {
         Map<String, Object> response = new HashMap<>();
         try {
             User user = userService.createUserWithRole(userDto);
-            response.put("status", HttpStatus.CREATED.value());
-            response.put("user", user);
+            if (user != null) {
+                String token = jwtUtils.generateToken(user);
+                response.put("status", HttpStatus.CREATED.value());
+                response.put("user", user);
+                response.put("token", token);
+            }
             return ResponseEntity.ok().body(response);
         } catch (Exception e) {
             String errorMessage = e.getMessage();
