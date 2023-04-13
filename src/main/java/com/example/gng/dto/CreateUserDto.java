@@ -8,7 +8,7 @@ import java.util.Set;
 
 @Data
 @Builder
-public class UserDto {
+public class CreateUserDto {
     @Email(message = "invalid_email")
     private String email;
 

@@ -1,22 +1,17 @@
 package com.example.gng.service;
 
-import com.example.gng.dto.UserDto;
+import com.example.gng.dto.CreateUserDto;
 import com.example.gng.model.Role;
 import com.example.gng.model.User;
 import com.example.gng.repository.RoleRepository;
 import com.example.gng.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -26,6 +21,9 @@ public class UserService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private BCryptService bCryptService;
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
@@ -40,15 +38,13 @@ public class UserService {
         return user;
     }
 
-    public User createUserWithRole(UserDto userDto) {
+    public User createUserWithRole(CreateUserDto createUserDto) {
         User user = new User();
-        user.setEmail(userDto.getEmail());
-        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        String hashedPassword = passwordEncoder.encode(userDto.getPassword());
-        user.setPassword(hashedPassword);
-        user.setType(userDto.getType());
+        user.setEmail(createUserDto.getEmail());
+        user.setPassword(bCryptService.encode(createUserDto.getPassword()));
+        user.setType(createUserDto.getType());
         Set<Role> roles = new HashSet<>();
-        for(String roleName: userDto.getRoles()) {
+        for(String roleName: createUserDto.getRoles()) {
             Role role = roleRepository.findByRole(roleName);
             roles.add(role);
         }
