@@ -5,6 +5,7 @@ import java.io.IOException;
 
 
 import com.example.gng.service.JwtUserDetailsService;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,27 +27,39 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUserDetailsService jwtUserDetailsService;
 
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-        final String authorizationHeader = request.getHeader("Authorization");
-        String username = null;
-        String jwt = null;
+        String authorizationHeader = request.getHeader(AUTHORIZATION_HEADER);
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            jwt = authorizationHeader.substring(7);
-            username = jwtUtils.extractUsername(jwt);
+        if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"ok\": false, \"error\": \"not_authenticated\"}");
+            return;
         }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.jwtUserDetailsService.loadUserByUsername(username);
+        String jwt = authorizationHeader.substring(BEARER_PREFIX.length());
 
-            if (jwtUtils.validateToken(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                // set the authentication object in the security context holder
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            String username = jwtUtils.extractUsername(jwt);
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.jwtUserDetailsService.loadUserByUsername(username);
+                if (jwtUtils.validateToken(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
+        } catch (JwtException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"ok\": false, \"error\": \"" + e.getMessage() + "\"}");
+            return;
         }
+
         chain.doFilter(request, response);
     }
 }
