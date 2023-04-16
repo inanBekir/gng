@@ -30,12 +30,13 @@ public class UserService {
     }
 
     public User getUserById(Long id) {
-        User user = userRepository.findById(id).orElse(null);
-        if (user != null) {
-            List<Role> roles = roleRepository.findByUsersId(id);
-            user.setRoles(new HashSet<>(roles));
-        }
-        return user;
+        return userRepository.findById(id)
+                .map(user -> {
+                    List<Role> roles = roleRepository.findByUsersId(id);
+                    user.setRoles(new HashSet<>(roles));
+                    return user;
+                })
+                .orElse(null);
     }
 
     public User createUserWithRole(CreateUserDto createUserDto) {
